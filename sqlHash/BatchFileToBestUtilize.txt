@@ -1,0 +1,33 @@
+﻿@ECHO off
+:: if no param - then a default
+SET thisDbName=%1
+SET thisServer=%2
+IF [%thisServer%]==[] SET thisServer=LocalHost
+IF [%thisDbName%]==[] @ECHO Please provide a database name. (Default is trusted user on [%thisServer%] server.)
+IF [%thisDbName%]==[] @ECHO  Must be run from command line like this: DBHash myDBname [optionalServername] 
+IF [%thisDbName%]==[] PAUSE
+:: please don't edit the code to foolishly putting id/passwords in script.. make user type in each time if can't do trusted user stuff...
+IF [%thisDbName%]==[] GOTO ENDSCRIPT
+
+:: set up some time values to timestamp files
+::  nicely lifted from here: https://www.dostips.com/forum/viewtopic.php?f=3&t=4555
+for /f "delims=" %%a in ('wmic OS Get localdatetime  ^| find "."') do set dt=%%a
+set dt=%dt:~0,8%_%dt:~8,6%
+
+SET thisConnectString=/cServer=%thisServer%;Database=%thisDbName%;Trusted_Connection=True;
+sqlhash %thisConnectString% > %thisServer%_%thisDbName%_%dt%_dbHash.txt
+IF NOT EXIST %thisServer%_%thisDbName%_baseline_dbHash.txt ECHO No baseline exists for [%thisServer%.%thisDbName%] - using this one.
+IF NOT EXIST %thisServer%_%thisDbName%_baseline_dbHash.txt TYPE %thisServer%_%thisDbName%_%dt%_dbHash.txt > %thisServer%_%thisDbName%_baseline_dbHash.txt
+
+:: comparing this file with baseline
+fc %thisServer%_%thisDbName%_baseline_dbHash.txt %thisServer%_%thisDbName%_%dt%_dbHash.txt > %thisServer%_%thisDbName%_baseline_dbHash.txt > FC2.tmp
+fc %thisServer%_%thisDbName%_baseline_dbHash.txt %thisServer%_%thisDbName%_%dt%_dbHash.txt | find "***">NUL
+IF     [%errorlevel%]==[0] SET unequal=YES
+IF     [%unequal%]==[YES]  ECHO ########## [%thisServer%.%thisDbName%] NOT_EQUAL_TO_BASELINE ##########
+IF     [%unequal%]==[YES]  fc /A /N %thisServer%_%thisDbName%_baseline_dbHash.txt %thisServer%_%thisDbName%_%dt%_dbHash.txt 
+IF NOT [%unequal%]==[YES]  ECHO [%thisServer%.%thisDbName%] identical to its baseline
+@DEL FC2.tmp
+SET unequal=
+
+:ENDSCRIPT
+:: enable this if you really need to know it's done... @ECHO -- End DBHash.bat --
