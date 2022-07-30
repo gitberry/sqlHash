@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sqlHash", "sqlHash\sqlHash.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{86B6448E-B0B7-4234-A864-00D7FF1CF5A2}"
 	ProjectSection(SolutionItems) = preProject
-		read.me = read.me
+		readme.md = readme.md
 	EndProjectSection
 EndProject
 Global
